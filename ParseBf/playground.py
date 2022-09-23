@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 
+from telegram_bot import TelegramBot
+
 
 class Convertor(object):
     @classmethod
@@ -133,15 +135,25 @@ class InplayMarketFinder(BaseParseBF):
         return out_all_list
 
     def turn_on(self):
+        bot = TelegramBot()
+
         try:
             self._connect()
             self.__find_markets()
             real_inplay_markets = self.__find_true_markets(self.__inplay_market())
             res = self.__markets_info_in_list(real_inplay_markets)
             sort_res = SortingMatchedAmaunt.above_average_price(res)
-            print(sort_res)
+            bot.send_message_to_telega(TelegramMassageView.HI)
+            for i in sort_res:
+                view_res = TelegramMassageView.standart_inplay_massage(i)
+                bot.send_message_to_telega(view_res)
+                print(view_res)
+                print()
         except Exception as e:
             print(e)
+        finally:
+            bot.send_message_to_telega(TelegramMassageView.GOOD_BAY)
+
 
     def turn_off(self):
         try:
@@ -173,31 +185,24 @@ class SortingMatchedAmaunt(BaseSorting):
                 good_list.append(_list[i])
         return good_list
 
+class BaseView(object):
+    pass
 
+class TelegramMassageView(BaseView):
+    HI = 'Now i see next matches.'
+    GOOD_BAY = 'Its all.'
 
+    @staticmethod
+    def hello():
+        return f'Now i see next matches.'
 
+    @staticmethod
+    def god_bay():
+        return f'Its all.'
 
-# class BaseView(object):
-#
-#     def _view(self, _list: list):
-#         self.text_list = [f'Date: {datetime.today().day}.{datetime.today().month}.{datetime.today().year}\n']
-#         for i in _list:
-#             try:
-#                 self.in_time = i.find_element_by_class_name(self.TIME_PLAY).text
-#                 self.home_score = i.find_element_by_class_name(self.PLAYER_1).text
-#                 self.away_score = i.find_element_by_class_name(self.PLAYER_2).text
-#                 self.amaunt = i.find_element_by_class_name(self.MARKET_VOLUME).text  ###
-#                 self.amaunt_int = self.changer.to_int(self.amaunt)
-#                 self.runners = i.find_elements_by_class_name(self.NAME_MARKET)
-#                 self.home_runner = self.runners[0].text
-#                 self.away_runner = self.runners[1].text
-#                 self.text = f'{self.amaunt}\n{self.in_time}\n' \
-#                             f'{self.home_score} {self.home_runner}\n{self.away_score} {self.away_runner}\n\n'
-#                 self.text_list.append(self.text)
-#             except:
-#                 print('error')
-#         self.text_join = ' '.join(self.text_list)
-#         return self.text_join
+    @staticmethod
+    def standart_inplay_massage(_):
+        return f'Matched: {_[0]}\nTime play: {_[1]}\n{_[2]}:{_[3]}  {_[4]} - {_[5]}'
 
 class Changer_types:
     def __del_charge(self, text: str):
