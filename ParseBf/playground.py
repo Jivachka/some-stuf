@@ -55,7 +55,7 @@ class BaseParseBF(object):
         self.changer = Changer_types()
         self.chrome_options.add_argument("start-maximized")
         self.driver = webdriver.Chrome(self.PATH, options=self.chrome_options)
-        self.driver.wait = WebDriverWait(self.driver, 2)
+        self.driver.wait = WebDriverWait(self.driver, 8)
         self._inplay_markets = []
         self._soonplay_markets = []
 
@@ -73,7 +73,7 @@ class BaseParseBF(object):
         self.driver.quit()
         print(f'Session from {self.SITE} The end')
 
-class InplayMarkerFinder(BaseParseBF):
+class InplayMarketFinder(BaseParseBF):
     def __find_coupon_table(self) -> list:
         return self.driver.wait.until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, self.FIND_TABLE)))
@@ -106,7 +106,7 @@ class InplayMarkerFinder(BaseParseBF):
     def __inplay_len(self, _list: list):
         print(f'To find {len(_list)} inplay markens,man!')
 
-    def _markets_info_in_list(self, _list: list):
+    def __markets_info_in_list(self, _list: list):
         out_all_list = []
         text_list = [f'Date: {datetime.today().day}.{datetime.today().month}.{datetime.today().year}\n']
         for i in _list:
@@ -129,23 +129,17 @@ class InplayMarkerFinder(BaseParseBF):
                 out_all_list.append(out_marker_list)
                 print()
             except Exception as e:
-                print('_markets_info_in_list',e)
+                print('_markets_info_in_list', e)
         return out_all_list
 
     def turn_on(self):
         try:
             self._connect()
-            # print(self.__find_coupon_table())
             self.__find_markets()
-            # print(self.__inplay_market())
-            # print(self._inplay_markets)
-            inplay_markets = self.__find_true_markets(self.__inplay_market())
-            res = self._markets_info_in_list(inplay_markets)
-            print(res)
-
-            # self.__inplay_sorted_market = self.__find_true_markets(self.__inplay_market())
-            # print(self._view(self.__inplay_sorted_market))
-
+            real_inplay_markets = self.__find_true_markets(self.__inplay_market())
+            res = self.__markets_info_in_list(real_inplay_markets)
+            sort_res = SortingMatchedAmaunt.above_average_price(res)
+            print(sort_res)
         except Exception as e:
             print(e)
 
@@ -155,8 +149,36 @@ class InplayMarkerFinder(BaseParseBF):
         except:
             print('erorr to exit')
 
+class BaseSorting:
+    def serfing(func):
+        def inner(_: list):
+            for i in _:
+                func(i)
+        return inner
+
+class SortingMatchedAmaunt(BaseSorting):
+    @staticmethod
+    @BaseSorting.serfing
+    def max_market_amaunt(_):
+        pass
+
+    @staticmethod
+    def above_average_price(_list):
+        playgraud = [i[0] for i in _list]
+        maen = sum(playgraud)/len(playgraud)
+        good_list = []
+
+        for i in range(len(_list)-1):
+            if _list[i][0] >= maen:
+                good_list.append(_list[i])
+        return good_list
+
+
+
+
 
 # class BaseView(object):
+#
 #     def _view(self, _list: list):
 #         self.text_list = [f'Date: {datetime.today().day}.{datetime.today().month}.{datetime.today().year}\n']
 #         for i in _list:
@@ -190,12 +212,10 @@ class Changer_types:
         text = int(self.__replace_dot(_))
         return text
 
-
 class BaseMarket(object):
     pass
 
-
 if __name__ == "__main__":
-    browser = InplayMarkerFinder()
+    browser = InplayMarketFinder()
     browser.turn_on()
     browser.turn_off()
