@@ -163,3 +163,4 @@ cython_debug/
 T/__pycache__/
 
 .idea
+/chromedriver/
