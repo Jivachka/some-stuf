@@ -57,7 +57,8 @@ class BaseParseBF(object):
         self.changer = Changer_types()
         self.chrome_options.add_argument("start-maximized")
         self.driver = webdriver.Chrome(self.PATH, options=self.chrome_options)
-        self.driver.wait = WebDriverWait(self.driver, 8)
+        # self.driver.implicitly_wait(5)
+        self.driver.wait = WebDriverWait(self.driver, 30)
         self._inplay_markets = []
         self._soonplay_markets = []
 
@@ -66,17 +67,18 @@ class BaseParseBF(object):
         try:
             self.driver.get(self.SITE)
             print(f'Connect is DONE')
-            sleep(2)
+            # sleep(2)
         except Exception as e:
             print('Error', e)
 
     def _end(self):
-        sleep(2)
+        # sleep(2)
         self.driver.quit()
         print(f'Session from {self.SITE} The end')
 
 class InplayMarketFinder(BaseParseBF):
     def __find_coupon_table(self) -> list:
+        self.driver.wait = WebDriverWait(self.driver, 30)
         return self.driver.wait.until(EC.presence_of_all_elements_located(
             (By.CLASS_NAME, self.FIND_TABLE)))
 
@@ -101,9 +103,12 @@ class InplayMarketFinder(BaseParseBF):
         return result
 
     def __inplay_market(self):
-        # self.__find_markets()
-        result = self._inplay_markets.find_elements_by_class_name(self.FIND_MARKET)
-        return result
+        if self._inplay_markets:
+            # return self.driver.find_elements_by_class_name(self.FIND_MARKET)
+            result = self._inplay_markets.find_elements_by_class_name(self.FIND_MARKET)
+            return result
+        else:
+            raise TypeError
 
     def __inplay_len(self, _list: list):
         print(f'To find {len(_list)} inplay markens,man!')
@@ -154,7 +159,6 @@ class InplayMarketFinder(BaseParseBF):
         finally:
             bot.send_message_to_telega(TelegramMassageView.GOOD_BAY)
 
-
     def turn_off(self):
         try:
             self._end()
@@ -189,16 +193,8 @@ class BaseView(object):
     pass
 
 class TelegramMassageView(BaseView):
-    HI = 'Now i see next matches.'
+    HI = 'Now i see the next matches.'
     GOOD_BAY = 'Its all.'
-
-    @staticmethod
-    def hello():
-        return f'Now i see next matches.'
-
-    @staticmethod
-    def god_bay():
-        return f'Its all.'
 
     @staticmethod
     def standart_inplay_massage(_):
@@ -216,9 +212,6 @@ class Changer_types:
     def to_int(self, _):
         text = int(self.__replace_dot(_))
         return text
-
-class BaseMarket(object):
-    pass
 
 if __name__ == "__main__":
     browser = InplayMarketFinder()
